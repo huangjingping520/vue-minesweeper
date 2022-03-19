@@ -1,17 +1,8 @@
 <script setup lang="ts">
-
-interface BlockState {
-  x: number
-  y: number
-  revealed: boolean
-  mine?: boolean
-  flagged?: boolean
-  adjacentMines: number
-}
-
+import type { BlockState } from '~/types'
 const WEIGHT = 10
 const HEIGHT = 10
-const state = reactive(
+const state = ref(
   Array.from({ length: HEIGHT }, (_, y) =>
     Array.from({ length: WEIGHT },
       (_, x): BlockState => ({
@@ -25,7 +16,7 @@ const state = reactive(
 )
 
 function generateMines(initial: BlockState) {
-  for (const row of state) {
+  for (const row of state.value) {
     for (const block of row) {
       if (Math.abs(initial.x - block.x) <= 1)
         continue
@@ -61,7 +52,7 @@ const numberColors = [
 ]
 
 function updateNumbers() {
-  state.forEach((row, y) => {
+  state.value.forEach((row, y) => {
     row.forEach((block, x) => {
       if (block.mine)
         return
@@ -92,6 +83,7 @@ function onRightClick(block: BlockState) {
   if (block.revealed)
     return
   block.flagged = !block.flagged
+  // checkGameState()
 }
 
 function onClick(e: MouseEvent, block: BlockState) {
@@ -104,7 +96,7 @@ function onClick(e: MouseEvent, block: BlockState) {
     alert('BOOOOM!')
 
   expendZero(block)
-  checkGameState()
+  // checkGameState()
 }
 
 function getBlockClass(block: BlockState) {
@@ -125,13 +117,17 @@ function getSiblings(block: BlockState) {
     if (x2 < 0 || x2 >= WEIGHT || y2 < 0 || y2 >= HEIGHT)
       return undefined
 
-    return state[y2][x2]
+    return state.value[y2][x2]
   })
     .filter(Boolean) as BlockState[]
 }
 
+watchEffect(checkGameState)
+
 function checkGameState() {
-  const blocks = state.flat()
+  if (!mineGenerated)
+    return
+  const blocks = state.value.flat()
 
   if (blocks.every(block => block.revealed || block.flagged)) {
     if (blocks.some(block => block.flagged && !block.mine))

@@ -47,5 +47,6 @@ watchEffect(() => {
         RESET
       </button>
     </div>
+    <Confetti :passed="play.state.value.gameState === 'won'" />
   </div>
 </template>
